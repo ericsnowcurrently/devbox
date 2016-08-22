@@ -2,7 +2,8 @@
 import types
 import unittest
 
-from devbox.__main__ import parse_args, main
+import devbox.command
+from devbox.__main__ import parse_args, get_command, main
 
 
 class StubCommand:
@@ -20,37 +21,61 @@ class StubCommand:
 class TestParseArgs(unittest.TestCase):
 
     def test_defaults(self):
-        args = parse_args()
+        args = parse_args(['spam'])
 
         self.assertEqual(vars(args),
-                         {'dryrun': False, 'verbosity': 0})
+                         {'dryrun': False,
+                          'verbosity': 0,
+                          'target': 'spam',
+                          })
 
     def test_verbose(self):
-        args = parse_args(['-vvv'])
+        args = parse_args(['-vvv', 'spam'])
 
         self.assertEqual(args.verbosity, 3)
 
     def test_quiet(self):
-        args = parse_args(['-qqq'])
+        args = parse_args(['-qqq', 'spam'])
 
         self.assertEqual(args.verbosity, -3)
 
     def test_verbosity_mixed(self):
-        args = parse_args(['-qqq', '-vv', '-v' ,'-q', '-vv'])
+        args = parse_args(['-qqq', '-vv', '-v' ,'-q', '-vv', 'spam'])
 
         self.assertEqual(args.verbosity, 1)
 
     def test_dryrun(self):
-        args = parse_args(['--dryrun'])
+        args = parse_args(['--dryrun', 'spam'])
 
         self.assertTrue(args.dryrun)
+
+
+class TestGetCommand(unittest.TestCase):
+
+    def test_defaults(self):
+        args = types.SimpleNamespace(
+            verbosity=0,
+            dryrun=False,
+            target='spam',
+            )
+
+        cmd = get_command(args)
+
+        self.assertIsInstance(cmd, devbox.command.Command)
+        self.assertEqual(cmd.verbosity, 0)
+        self.assertFalse(cmd.dryrun)
+        self.assertEqual(cmd.target, 'spam')
 
 
 class TestMain(unittest.TestCase):
 
     def setUp(self):
         super().setUp()
-        self.args = types.SimpleNamespace(verbosity=0, dryrun=False)
+        self.args = types.SimpleNamespace(
+            verbosity=0,
+            dryrun=False,
+            target='spam',
+            )
         self.cmd = StubCommand()
 
     def _get_command(self, args):

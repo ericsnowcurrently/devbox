@@ -24,7 +24,7 @@ def parse_args(argv=None):
     indent = ' ' * len('usage: ')
     usage = '\n'.join(('devbox -h | --help',
                        indent + 'devbox -V | --version',
-                       indent + 'devbox [-qv] [--dryrun]',
+                       indent + 'devbox [-qv] [--dryrun] target',
                        ))
     parser = argparse.ArgumentParser(
         prog='devbox',
@@ -34,6 +34,8 @@ def parse_args(argv=None):
         )
     parser.add_argument('--dryrun', action='store_true', default=False,
                         help='show what would have been done')
+    parser.add_argument('target',
+                        help='the container or host to set up')
 
     # Parse and post-process the commandline.
     args = parser.parse_args(argv)
@@ -49,7 +51,8 @@ def parse_args(argv=None):
 
 def get_command(args):
     """Return the command that corresponds to the args."""
-    cmd = Command(verbosity=args.verbosity,
+    cmd = Command(target=args.target,
+                  verbosity=args.verbosity,
                   dryrun=args.dryrun,
                   )
     return cmd

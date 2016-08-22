@@ -25,11 +25,16 @@ class BaseCommand:
 class Command(BaseCommand):
     """A single command."""
 
-    ATTRS = BaseCommand.ATTRS + ['dryrun']
+    ATTRS = BaseCommand.ATTRS + ['dryrun', 'target']
 
-    def __init__(self, *, dryrun=False, **kwargs):
+    def __init__(self, target, *, dryrun=False, **kwargs):
         super().__init__(**kwargs)
+        self._target = target
         self._dryrun = dryrun
+
+    @property
+    def target(self):
+        return self._target
 
     @property
     def dryrun(self):
