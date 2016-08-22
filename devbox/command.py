@@ -1,17 +1,27 @@
 
+import logging
+
 
 class BaseCommand:
     """The common functionality of commands."""
 
-    ATTRS = ['verbosity']
+    ATTRS = ['logger', 'verbosity']
 
-    def __init__(self, *, verbosity=0):
+    def __init__(self, *, logger=None, verbosity=0):
+        if logger is None:
+            logger = logging.getLogger(__name__)
+
+        self._logger = logger
         self._verbosity = verbosity
 
     def __repr__(self):
         args = ', '.join('{}={!r}'.format(attr, getattr(self, attr))
                          for attr in self.ATTRS)
         return '{}({})'.format(self.__class__.__name__, args)
+
+    @property
+    def logger(self):
+        return self._logger
 
     @property
     def verbosity(self):
@@ -42,4 +52,4 @@ class Command(BaseCommand):
 
     def run(self):
         """Run the command."""
-        print(self)
+        self.logger.info(str(self))

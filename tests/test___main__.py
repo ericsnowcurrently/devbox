@@ -1,4 +1,5 @@
 
+import logging
 import types
 import unittest
 
@@ -58,11 +59,13 @@ class TestGetCommand(unittest.TestCase):
             dryrun=False,
             target='spam',
             )
+        logger = logging.Logger('eggs')
 
-        cmd = get_command(args)
+        cmd = get_command(args, logger)
 
         self.assertIsInstance(cmd, devbox.command.Command)
         self.assertEqual(cmd.verbosity, 0)
+        self.assertEqual(cmd.logger, logger)
         self.assertFalse(cmd.dryrun)
         self.assertEqual(cmd.target, 'spam')
 
@@ -78,7 +81,7 @@ class TestMain(unittest.TestCase):
             )
         self.cmd = StubCommand()
 
-    def _get_command(self, args):
+    def _get_command(self, args, logger):
         self.assertIs(args, self.args)
         return self.cmd
 

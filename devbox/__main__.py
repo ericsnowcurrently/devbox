@@ -1,7 +1,32 @@
 import argparse
+import logging
 import sys
 
 from .command import Command
+
+
+def get_logger(verbosity, defaultlevel=2):
+    if verbosity is None:
+        verbosity = 0
+
+    logger = logging.getLogger(__package__)
+    logger.propagate = False
+
+    LOG_LEVELS = {0: logging.CRITICAL,
+                  1: logging.WARNING,
+                  2: logging.INFO,
+                  3: logging.DEBUG,
+                  }
+    levelnum = verbosity + defaultlevel
+    level = LOG_LEVELS[min(max(levelnum, 0),
+                           max(LOG_LEVELS))]
+    logger.setLevel(level)
+
+    handler = logging.StreamHandler()
+    #handler.setFormatter(logging.Formatter())
+    logger.addHandler(handler)
+
+    return logger
 
 
 def parse_args(argv=None):
@@ -49,9 +74,10 @@ def parse_args(argv=None):
     return args
 
 
-def get_command(args):
+def get_command(args, logger):
     """Return the command that corresponds to the args."""
     cmd = Command(target=args.target,
+                  logger=logger,
                   verbosity=args.verbosity,
                   dryrun=args.dryrun,
                   )
@@ -60,7 +86,9 @@ def get_command(args):
 
 def main(args, *, _get_command=get_command):
     """Execute the devbox command."""
-    cmd = _get_command(args)
+    logger = get_logger(args.verbosity)
+
+    cmd = _get_command(args, logger)
     try:
         cmd.run()
     except Exception as e:
