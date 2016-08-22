@@ -1,7 +1,20 @@
 
+import types
 import unittest
 
 from devbox.__main__ import parse_args, main
+
+
+class StubCommand:
+
+    def __init__(self):
+        self.calls = []
+        self.err = None
+
+    def run(self):
+        self.calls.append('run')
+        if self.err is not None:
+            raise self.err
 
 
 class TestParseArgs(unittest.TestCase):
@@ -35,5 +48,34 @@ class TestParseArgs(unittest.TestCase):
 
 class TestMain(unittest.TestCase):
 
-    def test_(self):
-        pass
+    def setUp(self):
+        super().setUp()
+        self.args = types.SimpleNamespace(verbosity=0, dryrun=False)
+        self.cmd = StubCommand()
+
+    def _get_command(self, args):
+        self.assertIs(args, self.args)
+        return self.cmd
+
+    def test_defaults(self):
+        result = main(self.args, _get_command=self._get_command)
+
+        self.assertEqual(result, 0)
+
+    def test_verbose_error(self):
+        err = Exception('<failed!>')
+        self.cmd.err = err
+        self.args.verbosity = 1
+
+        with self.assertRaises(Exception) as cm:
+            main(self.args, _get_command=self._get_command)
+
+        self.assertIs(cm.exception, err)
+
+    def test_quiet_error(self):
+        err = Exception('<failed!>')
+        self.cmd.err = err
+
+        result = main(self.args, _get_command=self._get_command)
+
+        self.assertEqual(result, 'ERROR: <failed!>')

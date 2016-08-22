@@ -1,4 +1,7 @@
 import argparse
+import sys
+
+from .command import Command
 
 
 def parse_args(argv=None):
@@ -16,8 +19,6 @@ def parse_args(argv=None):
                         help='increase verbosity')
     parent.add_argument('-q', '--quiet', action='count', default=0,
                         help='decrease verbosity')
-    parent.add_argument('--dryrun', action='store_true', default=False,
-                        help='show what would have been done')
 
     # Compose the default command.
     indent = ' ' * len('usage: ')
@@ -31,6 +32,8 @@ def parse_args(argv=None):
         description='tools for setting up a dev environment',
         parents=[parent],
         )
+    parser.add_argument('--dryrun', action='store_true', default=False,
+                        help='show what would have been done')
 
     # Parse and post-process the commandline.
     args = parser.parse_args(argv)
@@ -44,11 +47,26 @@ def parse_args(argv=None):
     return args
 
 
-def main(args):
+def get_command(args):
+    """Return the command that corresponds to the args."""
+    cmd = Command(verbosity=args.verbosity,
+                  dryrun=args.dryrun,
+                  )
+    return cmd
+
+
+def main(args, *, _get_command=get_command):
     """Execute the devbox command."""
-    print(args)
+    cmd = _get_command(args)
+    try:
+        cmd.run()
+    except Exception as e:
+        if args.verbosity <= 0:
+            return 'ERROR: {}'.format(e)
+        raise
+    return 0
 
 
 if __name__ == '__main__':
     args = parse_args()
-    main(args)
+    sys.exit(main(args))
